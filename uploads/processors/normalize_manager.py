@@ -45,15 +45,18 @@ def normalize_text(value):
 
 
 def clean_client_name(client_val):
-    """Очищает наименование клиента и корректно обрабатывает списки у Ушакова."""
+    """Очищает наименование клиента и исключает итоговые строки."""
     if pd.isna(client_val):
         return None
     
     text = str(client_val).strip()
-    if not text or text.lower() in ["nan", "none", "null", "0", "итого", "всего"]:
+    text_lower = text.lower()
+    
+    # Отсекаем итоговые/служебные строки Excel
+    stop_words = ["nan", "none", "null", "0", "итого", "всего", "среднее", "баланс", "параметры"]
+    if not text or any(sw in text_lower for sw in stop_words):
         return None
 
-    # Если в ячейке несколько клиентов через перенос строки, берем первого/основного
     if "\n" in text:
         lines = [line.strip() for line in text.split("\n") if line.strip()]
         if lines:
