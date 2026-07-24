@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Изменение файла</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            color: #1f2937;
+        }
+
+        .container {
+            max-width: 760px;
+            margin: 50px auto;
+            padding: 0 24px;
+        }
+
+        .panel {
+            padding: 32px;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        select,
+        input[type="file"],
+        input[type="date"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            background: white;
+        }
+
+        .current-file {
+            margin-bottom: 24px;
+            padding: 14px;
+            border-radius: 9px;
+            background: #f3f4f6;
+            color: #4b5563;
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 26px;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 12px 18px;
+            border: 0;
+            border-radius: 9px;
+            text-decoration: none;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .button-save {
+            background: #2563eb;
+            color: #ffffff;
+        }
+
+        .button-cancel {
+            background: #e5e7eb;
+            color: #1f2937;
+        }
+
+        .field-error {
+            margin-top: 7px;
+            color: #b91c1c;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <main class="container">
+        <section class="panel">
+            <h1>Изменить файл</h1>
+
+            <div class="current-file">
+                Текущий файл:
+                <strong>{{ uploaded_file.original_name }}</strong>
+            </div>
+
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <label for="{{ form.file_type.id_for_label }}">
+                        Тип файла
+                    </label>
+                    {{ form.file_type }}
+                </div>
+
+                <div class="form-group" id="manager-field">
+                    <label for="{{ form.manager.id_for_label }}">
+                        Менеджер
+                    </label>
+                    {{ form.manager }}
+
+                    {% for error in form.manager.errors %}
+                        <div class="field-error">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="form-group" id="forecast-date-field">
+                    <label for="{{ form.forecast_date.id_for_label }}">
+                        Дата прогноза
+                    </label>
+                    {{ form.forecast_date }}
+
+                    {% for error in form.forecast_date.errors %}
+                        <div class="field-error">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.file.id_for_label }}">
+                        Новый файл
+                    </label>
+
+                    {{ form.file }}
+
+                    <p>
+                        Оставь поле пустым, чтобы сохранить текущий файл.
+                    </p>
+
+                    {% for error in form.file.errors %}
+                        <div class="field-error">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="actions">
+                    <button type="submit" class="button button-save">
+                        Сохранить изменения
+                    </button>
+
+                    <a
+                        href="{% url 'uploads:upload_files' %}"
+                        class="button button-cancel"
+                    >
+                        Отмена
+                    </a>
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const fileTypeSelect = document.getElementById(
+            "{{ form.file_type.id_for_label }}"
+        );
+
+        const managerField = document.getElementById("manager-field");
+        const forecastDateField = document.getElementById(
+            "forecast-date-field"
+        );
+
+        const managerSelect = document.getElementById(
+            "{{ form.manager.id_for_label }}"
+        );
+
+        const forecastDateInput = document.getElementById(
+            "{{ form.forecast_date.id_for_label }}"
+        );
+
+        function updateForecastFields() {
+            const isManagerForecast =
+                fileTypeSelect.value === "manager_forecast";
+
+            managerField.style.display =
+                isManagerForecast ? "block" : "none";
+
+            forecastDateField.style.display =
+                isManagerForecast ? "block" : "none";
+
+            managerSelect.required = isManagerForecast;
+            forecastDateInput.required = isManagerForecast;
+
+            if (!isManagerForecast) {
+                managerSelect.value = "";
+                forecastDateInput.value = "";
+            }
+        }
+
+        fileTypeSelect.addEventListener(
+            "change",
+            updateForecastFields
+        );
+
+        updateForecastFields();
+    });
+</script>
+
+</body>
+</html>

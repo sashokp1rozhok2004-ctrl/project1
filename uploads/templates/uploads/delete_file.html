@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Удаление файла</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            color: #1f2937;
+        }
+
+        .dialog {
+            width: 100%;
+            max-width: 520px;
+            padding: 36px;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        .warning {
+            padding: 14px;
+            border-radius: 9px;
+            background: #fee2e2;
+            color: #991b1b;
+            line-height: 1.5;
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 12px 18px;
+            border: 0;
+            border-radius: 9px;
+            text-decoration: none;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .button-delete {
+            background: #dc2626;
+            color: #ffffff;
+        }
+
+        .button-cancel {
+            background: #e5e7eb;
+            color: #1f2937;
+        }
+    </style>
+</head>
+
+<body>
+    <main class="dialog">
+        <h1>Удалить файл?</h1>
+
+        <div class="warning">
+            Файл
+            <strong>{{ uploaded_file.original_name }}</strong>
+            будет удалён из истории и с компьютера.
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="actions">
+                <button type="submit" class="button button-delete">
+                    Удалить
+                </button>
+
+                <a
+                    href="{% url 'uploads:upload_files' %}"
+                    class="button button-cancel"
+                >
+                    Отмена
+                </a>
+            </div>
+        </form>
+    </main>
+</body>
+</html>

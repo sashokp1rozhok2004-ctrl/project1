@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Загрузка файлов</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            color: #1f2937;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 40px;
+            background: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .header a {
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 24px;
+        }
+
+        .panel {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        select,
+        input[type="file"],
+        input[type="date"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            background: #ffffff;
+        }
+
+        button {
+            padding: 13px 20px;
+            border: 0;
+            border-radius: 9px;
+            background: #2563eb;
+            color: #ffffff;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .manager-action-download {
+            background: #e0e7ff;
+            color: #4338ca;
+        }
+
+        .manager-action {
+            transition:
+                transform 0.15s ease,
+                opacity 0.15s ease;
+        }
+
+        .header-links {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .manager-action:hover {
+            transform: translateY(-1px);
+            opacity: 0.88;
+        }
+
+        .errors {
+            margin-bottom: 20px;
+            padding: 14px;
+            border-radius: 8px;
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .history {
+            margin-top: 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #ffffff;
+        }
+
+        th,
+        td {
+            padding: 14px;
+            border-bottom: 1px solid #e5e7eb;
+            text-align: left;
+        }
+
+        th {
+            color: #4b5563;
+            font-size: 14px;
+        }
+
+        .empty {
+            padding: 24px;
+            color: #6b7280;
+            text-align: center;
+        }
+        .field-error {
+            margin-top: 7px;
+            color: #b91c1c;
+            font-size: 14px;
+        }
+
+        .manager-status-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+            margin-top: 20px;
+        }
+
+        .manager-status-card {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 18px;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+        }
+
+        .manager-name {
+            margin: 0 0 6px;
+            font-weight: 700;
+        }
+
+        .manager-details {
+            margin: 0;
+            color: #6b7280;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .status-loaded {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-valid {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-not-checked {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .status-missing {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .action-link {
+            display: inline-block;
+            padding: 7px 10px;
+            border-radius: 7px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .action-edit {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .action-delete {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+        .status-tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip-content {
+            position: absolute;
+            z-index: 20;
+            top: calc(100% + 10px);
+            right: 0;
+
+            width: 280px;
+            padding: 15px;
+
+            background: #111827;
+            color: #ffffff;
+
+            border-radius: 10px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
+
+            font-size: 13px;
+            line-height: 1.6;
+
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-5px);
+
+            transition:
+                opacity 0.18s ease,
+                transform 0.18s ease,
+                visibility 0.18s ease;
+
+            pointer-events: none;
+        }
+
+        .tooltip-content::before {
+            content: "";
+            position: absolute;
+            right: 18px;
+            top: -7px;
+
+            width: 14px;
+            height: 14px;
+
+            background: #111827;
+            transform: rotate(45deg);
+        }
+
+        .tooltip-content strong {
+            display: block;
+            margin-bottom: 8px;
+            word-break: break-word;
+        }
+
+        .tooltip-content div {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .tooltip-content span {
+            color: #d1d5db;
+            text-align: right;
+        }
+
+        .tooltip-message {
+            display: block !important;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #374151;
+            color: #d1d5db;
+        }
+
+        .status-tooltip:hover .tooltip-content {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .manager-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .manager-action {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 7px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .manager-action-edit {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .manager-action-delete {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .company-files-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .company-file-card {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 24px;
+            padding: 22px;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+        }
+
+        .company-file-main h3 {
+            margin: 0 0 8px;
+        }
+
+        .company-file-details {
+            margin: 0;
+            color: #6b7280;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .other-files-title {
+            margin-top: 28px;
+        }
+
+        .company-other-files {
+            display: grid;
+            gap: 12px;
+        }
+
+        .other-file-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 18px;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+        }
+
+        @media (max-width: 700px) {
+            .company-file-card,
+            .other-file-card {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 750px) {
+            .manager-status-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header">
+        <h1>Загрузка файлов</h1>
+
+        <a href="{% url 'uploads:processing_readiness' %}">
+            Проверить готовность
+        </a>
+
+        <a href="{% url 'accounts:dashboard' %}">
+            Вернуться в кабинет
+        </a>
+    </header>
+
+    <main class="container">
+        <section class="panel">
+            <h2>Добавить новый файл</h2>
+
+            {% if form.errors %}
+                <div class="errors">
+                    {{ form.errors }}
+                </div>
+            {% endif %}
+
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <label for="{{ form.file_type.id_for_label }}">
+                        Тип файла
+                    </label>
+
+                    {{ form.file_type }}
+
+                    {% for error in form.file_type.errors %}
+                        <div class="field-error">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="form-group" id="manager-field">
+                    <label for="{{ form.manager.id_for_label }}">
+                        Менеджер
+                    </label>
+
+                    {{ form.manager }}
+
+                    {% for error in form.manager.errors %}
+                        <div class="field-error">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="form-group" id="forecast-date-field">
+                    <label for="{{ form.forecast_date.id_for_label }}">
+                        Дата прогноза
+                    </label>
+
+                    {{ form.forecast_date }}
+
+                    {% for error in form.forecast_date.errors %}
+                        <div class="field-error">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.file.id_for_label }}">
+                        Выберите файл
+                    </label>
+
+                    {{ form.file }}
+
+                    {% for error in form.file.errors %}
+                        <div class="field-error">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <button type="submit">
+                    Загрузить файл
+                </button>
+            </form>
+        </section>
+
+        
+
+        <section class="history">
+
+            <h2>Файлы компании</h2>
+                <div class="company-files-grid">
+                    <article class="company-file-card">
+                        <div class="company-file-main">
+                            <h3>Фактические продажи</h3>
+
+                            {% if actual_sales_file %}
+                                <p class="company-file-details">
+                                    Файл:
+                                    {{ actual_sales_file.original_name }}
+                                    <br>
+
+                                    Загружено:
+                                    {{ actual_sales_file.uploaded_at|date:"d.m.Y H:i" }}
+                                </p>
+
+                                <div class="manager-actions">
+                                    <a
+                                        href="{% url 'uploads:edit_file' actual_sales_file.id %}"
+                                        class="manager-action manager-action-edit"
+                                    >
+                                        Изменить
+                                    </a>
+
+                                    <a
+                                        href="{% url 'uploads:delete_file' actual_sales_file.id %}"
+                                        class="manager-action manager-action-delete"
+                                    >
+                                        Удалить
+                                    </a>
+                                </div>
+                            {% else %}
+                                <p class="company-file-details">
+                                    Файл ещё не загружен
+                                </p>
+                            {% endif %}
+                        </div>
+
+                        {% if actual_sales_file %}
+                            <div class="status-tooltip">
+                                {% if actual_sales_file.validation_status == "valid" %}
+                                    <span class="status status-valid">
+                                        Проверен
+                                    </span>
+
+                                {% elif actual_sales_file.validation_status == "warning" %}
+                                    <span class="status status-warning">
+                                        Есть предупреждения
+                                    </span>
+
+                                {% elif actual_sales_file.validation_status == "error" %}
+                                    <span class="status status-error">
+                                        Ошибка
+                                    </span>
+
+                                {% else %}
+                                    <span class="status status-not-checked">
+                                        Не проверен
+                                    </span>
+                                {% endif %}
+
+                                <div class="tooltip-content">
+                                    <strong>
+                                        {{ actual_sales_file.original_name }}
+                                    </strong>
+
+                                    <div>
+                                        Статус проверки:
+                                        <span>
+                                            {{ actual_sales_file.get_validation_status_display }}
+                                        </span>
+                                    </div>
+
+                                    <div>
+                                        Листов:
+                                        <span>{{ actual_sales_file.sheet_count }}</span>
+                                    </div>
+
+                                    <div>
+                                        Строк:
+                                        <span>{{ actual_sales_file.row_count }}</span>
+                                    </div>
+
+                                    <div>
+                                        Столбцов:
+                                        <span>{{ actual_sales_file.column_count }}</span>
+                                    </div>
+
+                                    {% if actual_sales_file.validation_message %}
+                                        <div class="tooltip-message">
+                                            {{ actual_sales_file.validation_message|linebreaksbr }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% else %}
+                            <span class="status status-missing">
+                                Не загружен
+                            </span>
+                        {% endif %}
+                    </article>
+                </div>
+
+                {% if other_company_files %}
+                    <h3 class="other-files-title">
+                        Другие файлы компании
+                    </h3>
+
+                    <div class="company-other-files">
+                        {% for item in other_company_files %}
+                            <article class="other-file-card">
+                                <div>
+                                    <strong>{{ item.original_name }}</strong>
+
+                                    <p class="company-file-details">
+                                        Загружено:
+                                        {{ item.uploaded_at|date:"d.m.Y H:i" }}
+                                    </p>
+                                </div>
+
+                                <div class="manager-actions">
+
+                                    <a
+                                        href="{% url 'uploads:download_file' item.id %}"
+                                        class="manager-action manager-action-download"
+                                    >
+                                        Скачать
+                                    </a>
+
+                                    <a
+                                        href="{% url 'uploads:download_file' actual_sales_file.id %}"
+                                        class="manager-action manager-action-download"
+                                    >
+                                        Скачать
+                                    </a>
+                                    <a
+                                        href="{% url 'uploads:edit_file' item.id %}"
+                                        class="manager-action manager-action-edit"
+                                    >
+                                        Изменить
+                                    </a>
+
+                                    <a
+                                        href="{% url 'uploads:delete_file' item.id %}"
+                                        class="manager-action manager-action-delete"
+                                    >
+                                        Удалить
+                                    </a>
+                                </div>
+                            </article>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+            <h2>Статус файлов менеджеров</h2>
+
+            <div class="manager-status-grid">
+                {% for manager in manager_statuses %}
+                    <article class="manager-status-card">
+                        <div>
+                            <p class="manager-name">
+                                {{ manager.name }}
+                            </p>
+
+                            {% if manager.file %}
+                                <p class="manager-details">
+                                    Файл:
+                                    {{ manager.file.original_name }}
+                                    <br>
+
+                                    Дата прогноза:
+                                    {{ manager.file.forecast_date|date:"d.m.Y" }}
+                                    <br>
+
+                                    Загружено:
+                                    {{ manager.file.uploaded_at|date:"d.m.Y H:i" }}
+                                </p>
+
+                                <div class="manager-actions">
+
+                                    <a
+                                        href="{% url 'uploads:download_file' manager.file.id %}"
+                                        class="manager-action manager-action-download"
+                                    >
+                                        Скачать
+                                    </a>
+                                    <a
+                                        href="{% url 'uploads:edit_file' manager.file.id %}"
+                                        class="manager-action manager-action-edit"
+                                    >
+                                        Изменить
+                                    </a>
+
+                                    <a
+                                        href="{% url 'uploads:delete_file' manager.file.id %}"
+                                        class="manager-action manager-action-delete"
+                                    >
+                                        Удалить
+                                    </a>
+                                </div>
+                            {% else %}
+                                <p class="manager-details">
+                                    Файл ещё не загружен
+                                </p>
+                            {% endif %}
+                        </div>
+
+                        {% if manager.file %}
+                            <div class="status-tooltip">
+                                {% if manager.file.validation_status == "valid" %}
+                                    <span class="status status-valid">
+                                        Проверен
+                                    </span>
+
+                                {% elif manager.file.validation_status == "warning" %}
+                                    <span class="status status-warning">
+                                        Есть предупреждения
+                                    </span>
+
+                                {% elif manager.file.validation_status == "error" %}
+                                    <span class="status status-error">
+                                        Ошибка
+                                    </span>
+
+                                {% else %}
+                                    <span class="status status-not-checked">
+                                        Не проверен
+                                    </span>
+                                {% endif %}
+
+                                <div class="tooltip-content">
+                                    <strong>{{ manager.file.original_name }}</strong>
+
+                                    <div>
+                                        Статус проверки:
+                                        <span>
+                                            {{ manager.file.get_validation_status_display }}
+                                        </span>
+                                    </div>
+
+                                    <div>
+                                        Листов:
+                                        <span>{{ manager.file.sheet_count }}</span>
+                                    </div>
+
+                                    <div>
+                                        Строк:
+                                        <span>{{ manager.file.row_count }}</span>
+                                    </div>
+
+                                    <div>
+                                        Столбцов:
+                                        <span>{{ manager.file.column_count }}</span>
+                                    </div>
+
+                                    {% if manager.file.validation_message %}
+                                        <div class="tooltip-message">
+                                            {{ manager.file.validation_message|linebreaksbr }}
+                                        </div>
+                                    {% endif %}
+
+                                    <div>
+                                        Дата прогноза:
+                                        <span>
+                                            {{ manager.file.forecast_date|date:"d.m.Y" }}
+                                        </span>
+                                    </div>
+
+                                    <div>
+                                        Загружено:
+                                        <span>
+                                            {{ manager.file.uploaded_at|date:"d.m.Y H:i" }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        {% else %}
+                            <span class="status status-missing">
+                                Не загружен
+                            </span>
+                        {% endif %}
+                    </article>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="history">
+            <h2>История загрузок</h2>
+
+            <div class="panel">
+                {% if files %}
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Имя файла</th>
+                                <th>Тип</th>
+                                <th>Менеджер</th>
+                                <th>Дата прогноза</th>
+                                <th>Загрузил</th>
+                                <th>Загружено в систему</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for item in files %}
+                                <tr>
+                                    <td>{{ item.original_name }}</td>
+
+                                    <td>
+                                        {{ item.get_file_type_display }}
+                                    </td>
+
+                                    <td>
+                                        {% if item.manager %}
+                                            {{ item.get_manager_display }}
+                                        {% else %}
+                                            —
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        {% if item.forecast_date %}
+                                            {{ item.forecast_date|date:"d.m.Y" }}
+                                        {% else %}
+                                            —
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        {{ item.uploaded_by.username }}
+                                    </td>
+
+                                    <td>
+                                        {{ item.uploaded_at|date:"d.m.Y H:i" }}
+                                    </td>
+
+                                    
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <div class="empty">
+                        Загруженных файлов пока нет.
+                    </div>
+                {% endif %}
+            </div>
+        </section>
+    </main>
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const fileTypeSelect = document.getElementById(
+            "{{ form.file_type.id_for_label }}"
+        );
+
+        const managerField = document.getElementById("manager-field");
+        const forecastDateField = document.getElementById(
+            "forecast-date-field"
+        );
+
+        const managerSelect = document.getElementById(
+            "{{ form.manager.id_for_label }}"
+        );
+
+        const forecastDateInput = document.getElementById(
+            "{{ form.forecast_date.id_for_label }}"
+        );
+
+        function updateForecastFields() {
+            const isManagerForecast =
+                fileTypeSelect.value === "manager_forecast";
+
+            managerField.style.display =
+                isManagerForecast ? "block" : "none";
+
+            forecastDateField.style.display =
+                isManagerForecast ? "block" : "none";
+
+            managerSelect.required = isManagerForecast;
+            forecastDateInput.required = isManagerForecast;
+
+            if (!isManagerForecast) {
+                managerSelect.value = "";
+                forecastDateInput.value = "";
+            }
+        }
+
+        fileTypeSelect.addEventListener(
+            "change",
+            updateForecastFields
+        );
+
+        updateForecastFields();
+    });
+</script>
+
+</body>
+</html>

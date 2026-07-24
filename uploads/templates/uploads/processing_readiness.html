@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Готовность данных</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            color: #1f2937;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 40px;
+            background: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .header a {
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .container {
+            max-width: 1050px;
+            margin: 40px auto;
+            padding: 0 24px;
+        }
+
+        .panel {
+            margin-bottom: 24px;
+            padding: 28px;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
+        }
+
+        .panel h2 {
+            margin-top: 0;
+        }
+
+        .progress-track {
+            height: 14px;
+            margin: 18px 0 10px;
+            overflow: hidden;
+            background: #e5e7eb;
+            border-radius: 999px;
+        }
+
+        .progress-fill {
+            width: {{ progress_percent }}%;
+            height: 100%;
+            background: #2563eb;
+            border-radius: 999px;
+        }
+
+        .summary {
+            margin-bottom: 0;
+            color: #6b7280;
+        }
+
+        .checks {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+        }
+
+        .check-card {
+            padding: 20px;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+        }
+
+        .check-card h3 {
+            margin: 0 0 12px;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .status-ready {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .manager-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .manager-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 14px;
+            background: #f9fafb;
+            border-radius: 10px;
+        }
+
+        .manager-details {
+            margin-top: 4px;
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 14px 22px;
+            border: 0;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .button-ready {
+            background: #2563eb;
+            color: #ffffff;
+            cursor: pointer;
+        }
+
+        .button-disabled {
+            background: #d1d5db;
+            color: #6b7280;
+            cursor: not-allowed;
+        }
+
+        .warning-message {
+            margin: 16px 0 0;
+            color: #991b1b;
+            line-height: 1.5;
+        }
+
+        .success-message {
+            margin: 16px 0 0;
+            color: #166534;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 800px) {
+            .checks,
+            .manager-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header {
+                align-items: flex-start;
+                flex-direction: column;
+                gap: 14px;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header">
+        <h1>Готовность данных к обработке</h1>
+
+        <a href="{% url 'uploads:upload_files' %}">
+            Вернуться к файлам
+        </a>
+    </header>
+
+    <main class="container">
+        <section class="panel">
+            <h2>Прогресс загрузки прогнозов</h2>
+
+            <div class="progress-track">
+                <div class="progress-fill"></div>
+            </div>
+
+            <p class="summary">
+                Загружено {{ loaded_managers|length }}
+                из {{ manager_statuses|length }}
+                файлов менеджеров — {{ progress_percent }}%.
+            </p>
+        </section>
+
+        <section class="panel">
+            <h2>Основные условия</h2>
+
+            <div class="checks">
+                <article class="check-card">
+                    <h3>Файлы менеджеров</h3>
+
+                    {% if manager_files_ready %}
+                        <span class="status status-ready">
+                            Все загружены
+                        </span>
+                    {% else %}
+                        <span class="status status-error">
+                            Загружены не все
+                        </span>
+                    {% endif %}
+                </article>
+
+                <article class="check-card">
+                    <h3>Проверка прогнозов</h3>
+
+                    {% if manager_files_valid %}
+                        <span class="status status-ready">
+                            Все проверены
+                        </span>
+                    {% elif problem_managers %}
+                        <span class="status status-warning">
+                            Есть проблемы
+                        </span>
+                    {% else %}
+                        <span class="status status-error">
+                            Недостаточно файлов
+                        </span>
+                    {% endif %}
+                </article>
+
+                <article class="check-card">
+                    <h3>Фактические продажи</h3>
+
+                    {% if actual_sales_ready %}
+                        <span class="status status-ready">
+                            Файл готов
+                        </span>
+                    {% elif actual_sales_file %}
+                        <span class="status status-warning">
+                            Файл содержит проблему
+                        </span>
+                    {% else %}
+                        <span class="status status-error">
+                            Файл не загружен
+                        </span>
+                    {% endif %}
+                </article>
+            </div>
+        </section>
+
+        <section class="panel">
+            <h2>Менеджеры</h2>
+
+            <div class="manager-grid">
+                {% for manager in manager_statuses %}
+                    <div class="manager-item">
+                        <div>
+                            <strong>{{ manager.name }}</strong>
+
+                            {% if manager.file %}
+                                <div class="manager-details">
+                                    {{ manager.file.original_name }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        {% if not manager.file %}
+                            <span class="status status-error">
+                                Нет файла
+                            </span>
+
+                        {% elif manager.file.validation_status == "valid" %}
+                            <span class="status status-ready">
+                                Готов
+                            </span>
+
+                        {% elif manager.file.validation_status == "warning" %}
+                            <span class="status status-warning">
+                                Предупреждение
+                            </span>
+
+                        {% else %}
+                            <span class="status status-error">
+                                Ошибка
+                            </span>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="panel">
+            <h2>Запуск обработки</h2>
+
+            {% if ready_for_processing %}
+                <button class="button button-ready">
+                    Начать обработку
+                </button>
+
+                <p class="success-message">
+                    Все обязательные файлы загружены и успешно проверены.
+                </p>
+            {% else %}
+                <button class="button button-disabled" disabled>
+                    Начать обработку
+                </button>
+
+                <p class="warning-message">
+                    Перед запуском необходимо загрузить и успешно
+                    проверить прогнозы всех менеджеров и файл
+                    фактических продаж.
+                </p>
+            {% endif %}
+        </section>
+    </main>
+</body>
+</html>

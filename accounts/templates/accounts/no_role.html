@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Нет доступа</title>
+</head>
+
+<body>
+    <h1>Роль пользователя не назначена</h1>
+
+    <p>
+        Обратитесь к администратору системы.
+    </p>
+
+    <form method="post" action="{% url 'accounts:logout' %}">
+        {% csrf_token %}
+        <button type="submit">Выйти</button>
+    </form>
+</body>
+</html>
